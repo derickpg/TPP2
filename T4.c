@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	printf("=-=-= COMECOU O ALG DIVISAO E CONQUISTA =-=-=");
 	int id, n, message, aux;
 	int i,j,tam_vector;
-	int nivel = 1; // Nivel da Arvore
+	//int nivel = 1; // Nivel da Arvore
 	double ti, tf; // Tempos
 	//Dados da Matriz
 	//int coluna = 1000; // Quantidade de Vetores
@@ -66,10 +66,14 @@ int main(int argc, char *argv[])
 	printf("\n ♥♥♥ 3 %d", id);
 	if (id == 0)
 	{ // RAIZ
+		printf("\n debuguinho 1");
 		ord = 1;
 		printf("\n Começo da Ordenação! Ordenação do tipo: %d", ord);
 
-		int *vetor = malloc(TAM * sizeof(int));
+		printf("\n ENTREI NO MALLOC");
+		int *vetor = malloc((TAM * sizeof(int)));
+		printf("\n SAI DO MALLOC");
+		//int *vetor;
 		// Iniciando o VETOR NÃO DEVE CONTAR COMO TEMPO DE ORDENAÇÃO
 		for (i = 0; i < TAM; i++)
 		{
@@ -77,7 +81,7 @@ int main(int argc, char *argv[])
 			vetor[i] = aux;
 		}
 		ti = MPI_Wtime();
-
+		printf("\n COMECA A PARTIDA");
 		if (TAM <= VALOR_FIXO)
 		{ // Ordena
 			qsort(vetor, TAM, sizeof(int), compare);
@@ -87,10 +91,10 @@ int main(int argc, char *argv[])
 			int *vetor_esq = divideVetor(vetor, 0, TAM / 2);
 			int *vetor_dir = divideVetor(vetor, TAM / 2, TAM);
 
-			nivel = nivel + 1;
+			//nivel = nivel + 1;
 			// Envio Mensagem para os Filhos
-			MPI_Send(nivel, 1, MPI_INT, (id * 2 + 1), 2, MPI_COMM_WORLD);			  // FILHO ESQUERDA
-			MPI_Send(nivel, 1, MPI_INT, (id * 2 + 2), 2, MPI_COMM_WORLD);			  // FILHO DIREITA
+			//MPI_Send(&nivel, 1, MPI_INT, (id * 2 + 1), 2, MPI_COMM_WORLD);			  // FILHO ESQUERDA
+			//MPI_Send(&nivel, 1, MPI_INT, (id * 2 + 2), 2, MPI_COMM_WORLD);			  // FILHO DIREITA
 			MPI_Send(vetor_esq, (TAM / 2), MPI_INT, (id * 2 + 1), 1, MPI_COMM_WORLD); // FILHO ESQUERDA
 			MPI_Send(vetor_dir, (TAM / 2), MPI_INT, (id * 2 + 2), 1, MPI_COMM_WORLD); // FILHO DIREITA
 
@@ -105,10 +109,11 @@ int main(int argc, char *argv[])
 	}
 	else
 	{ // FILHOS
-
+		printf("\n debuguinho 2");
 		int pai = ((id - 1) / 2);
-		MPI_Recv(nivel, 1, MPI_INT, pai, 2, MPI_COMM_WORLD, &status); // Recebe do PAI o NIVEL
-		int tam_novo_vetor = (TAM / (pow(2, (nivel - 1))));
+		//MPI_Recv(*nivel, 1, MPI_INT, pai, 2, MPI_COMM_WORLD, &status); // Recebe do PAI o NIVEL
+		//int tam_novo_vetor = (TAM / (pow(2, (nivel - 1))));
+		int tam_novo_vetor;
 		int *novo_vetor;
 		MPI_Recv(novo_vetor, tam_novo_vetor, MPI_INT, pai, 1, MPI_COMM_WORLD, &status); // Recebe do PAI o VETOR
 		if (tam_novo_vetor <= VALOR_FIXO)
@@ -124,10 +129,10 @@ int main(int argc, char *argv[])
 			int *vetor_esq = divideVetor(novo_vetor, 0, tam_novo_vetor / 2);
 			int *vetor_dir = divideVetor(novo_vetor, tam_novo_vetor / 2, tam_novo_vetor);
 
-			nivel = nivel + 1;
+			//nivel = nivel + 1;
 			// Envio Mensagem para os Filhos
-			MPI_Send(nivel, 1, MPI_INT, (id * 2 + 1), 2, MPI_COMM_WORLD);						 // FILHO ESQUERDA
-			MPI_Send(nivel, 1, MPI_INT, (id * 2 + 2), 2, MPI_COMM_WORLD);						 // FILHO DIREITA
+			//MPI_Send(&nivel, 1, MPI_INT, (id * 2 + 1), 2, MPI_COMM_WORLD);						 // FILHO ESQUERDA
+			//MPI_Send(&nivel, 1, MPI_INT, (id * 2 + 2), 2, MPI_COMM_WORLD);						 // FILHO DIREITA
 			MPI_Send(vetor_esq, (tam_novo_vetor / 2), MPI_INT, (id * 2 + 1), 1, MPI_COMM_WORLD); // FILHO ESQUERDA
 			MPI_Send(vetor_dir, (tam_novo_vetor / 2), MPI_INT, (id * 2 + 2), 1, MPI_COMM_WORLD); // FILHO DIREITA
 
