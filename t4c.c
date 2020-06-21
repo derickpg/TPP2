@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "mpi.h"
 
 main(int argc, char **argv)
@@ -10,6 +11,7 @@ main(int argc, char **argv)
     int tam_vet = 100, nums_vet = 10000; // o que eh nums_vet ?
     int tam_esq, tam_dir, tam_novo_vetor;
     int vetor[tam_vet];
+    int recebido[tam_vet];
     // TAGS
     int t_vetor = 50;
     int t_morte = 99;
@@ -57,18 +59,21 @@ main(int argc, char **argv)
         }
 
     } else /* Nodos abaixo da raiz, varios niveis */ {
+        int tam_vetor_n;
         id_pai = (id_proc - 1) / 2;
         while(1){
-            MPI_Recv(vetor, 500, MPI_INT, id_pai, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            MPI_Recv(recebido, tam_vet, MPI_INT, id_pai, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             if(status.MPI_TAG == t_vetor){
-                printf("\n Chegou !!! %d", id_proc);
+                printf("\n Chegou !!! %d e o tamanho do vetor => %d", id_proc, tam_vetor_n);
+                
 
             }else if(status.MPI_TAG == t_morte){
                 printf("\n MORRI !!! %d", id_proc);
                 MPI_Finalize();
                 return 0;
             }else if(status.MPI_TAG == t_nivel){
-                printf("\n NIVEL CHEGOU !!! %d", id_proc);
+                tam_vetor_n = (tam_vet / (pow(2, (recebido[0] - 1))));
+                printf("\n NIVEL CHEGOU !!! %d e tam", id_proc, tam_vetor_n);
             }
         }
     }
