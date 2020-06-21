@@ -30,6 +30,8 @@ main(int argc, char **argv)
     int i_esq = 0;
     int i_dir = 0;
     int espera = 0;
+    int *vet_esq_env;
+    int *vet_dir_env;
 
     // TAGS
     int t_vetor = 50;
@@ -72,14 +74,15 @@ main(int argc, char **argv)
         MPI_Send(vet_esq, (tam_vet/2), MPI_INT, id_filho_esq, t_vetor, MPI_COMM_WORLD);
         MPI_Send(vet_dir, (tam_vet/2), MPI_INT, id_filho_dir, t_vetor, MPI_COMM_WORLD);
         int verificacao = 0;
+
         while(verificacao == 0){
             MPI_Recv(recebido, tam_vet, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             if(status.MPI_TAG == t_r_vetor){
                     espera++;
                     if(status.MPI_SOURCE == id_filho_esq){
-                        vet_esq = &recebido;
+                        vet_esq_env = recebido;
                     }else{
-                        vet_dir = &recebido;
+                        vet_dir_env = recebido;
                     }
                     if(espera == 2){
                         int vetor_final[tam_vet];
@@ -88,13 +91,13 @@ main(int argc, char **argv)
                         i_dir = 0;
                         for (i = 0; i < tam_vet; i++)
                         {
-                            if (((vet_esq[i_esq] <= vet_dir[i_dir]) && (i_esq < (tam_vet/2))) || (i_dir == (tam_vet/2)))
-                                vetor_final[i] = vet_esq[i_esq++];
+                            if (((vet_esq_env[i_esq] <= vet_dir_env[i_dir]) && (i_esq < (tam_vet/2))) || (i_dir == (tam_vet/2)))
+                                vetor_final[i] = vet_esq_env[i_esq++];
                             else
-                                vetor_final[i] = vet_dir[i_dir++];
+                                vetor_final[i] = vet_dir_env[i_dir++];
                         }
                         verificacao = 1;
-                        print("\n\n ---------------- FIM -----------------------");
+                        printf("\n\n ---------------- FIM -----------------------");
                     }
             }
         }
@@ -118,7 +121,7 @@ main(int argc, char **argv)
                 if(tam_vetor_n <= tam_fixo){ // entao ordena
                     if(debug == 1) printf("\n VOU ORDENAR! %d e mandar para o pai %d", id_proc, id_pai);
                     // Manda para o pai o vetor ordenado
-                    int vet_aux[tam_vetor_n];
+                    int *vet_aux;
                     vet_aux = recebido;
                     qsort(vet_aux, tam_vetor_n, sizeof(int), compare);
 
@@ -158,12 +161,10 @@ main(int argc, char **argv)
                 if(debug == 1) printf("\n NIVEL CHEGOU !!! %d e tam %d", id_proc, tam_vetor_n);
             }else if(status.MPI_TAG == t_r_vetor){ // Aguardando o retorno do vetor
                 esperando_filho++;
-                int vet_esq_env[tam_vetor_n/2];
-                int vet_dir_env[tam_vetor_n/2];
                 if(status.MPI_SOURCE == id_filho_esq){
-                    vet_esq_env = *recebido;
+                    vet_esq_env = recebido;
                 }else{
-                    vet_dir_env = *recebido;
+                    vet_dir_env = recebido;
                 }
                 // So se receber os dois faz o processo do interleaving e manda para o pai
                 if(esperando_filho == 2){
