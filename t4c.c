@@ -12,7 +12,7 @@ int compare(const void *a, const void *b)
 main(int argc, char **argv)
 {
     // Parametros
-    int tam_vet = 100, nums_vet = 10000; // o que eh nums_vet ?
+    int tam_vet = 50, nums_vet = 1000; // tamanho do vetor inicial e range dos numeros aleatorios de ex 100 = 0~99
     int tam_fixo = 25;
 
     // Ativa e Desativa o DEBUG
@@ -52,6 +52,8 @@ main(int argc, char **argv)
         for (i = 0; i < tam_vet; i++)
             vetor[i] = rand() % nums_vet + 1;
 
+if(debug == 1) { int indice = 0; printf("\n Array Gerado na raiz: \n"); for (indice = 0; indice < tam_vet; indice++){ printf(" %d,", vetor[indice]); } printf("\n"); }
+
         //Por ser o raiz pular algumas etapas tipo calcular lados do array
         
         int vet_esq[tam_vet/2]; // 1000 / 2 = 500 0..499 500...999
@@ -76,27 +78,39 @@ main(int argc, char **argv)
         int verificacao = 0;
 
         while(verificacao == 0){
-            MPI_Recv(recebido, tam_vet, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            MPI_Recv(recebido, (tam_vet/2), MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
             if(status.MPI_TAG == t_r_vetor){
                     espera++;
                     if(status.MPI_SOURCE == id_filho_esq){
-                        vet_esq_env = recebido;
+                        // vet_esq_env = recebido;
+if(debug == 1) { int indice = 0; printf("\n Array do filho ESQ voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
+int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_esq_env[indice] = recebido[indice];
+                        
                     }else{
-                        vet_dir_env = recebido;
+                        // vet_dir_env = recebido;
+if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
+int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_dir_env[indice] = recebido[indice];
                     }
                     if(espera == 2){
                         int vetor_final[tam_vet];
                         // ~~~ Processo de Interleaving ~~~
                         i_esq = 0;
                         i_dir = 0;
-                        for (i = 0; i < tam_vet; i++)
-                        {
+if(debug == 1) { int indice = 0; printf("\n Array do filho ESQ voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", vet_esq_env[indice]); } printf("\n"); }
+if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", vet_dir_env[indice]); } printf("\n"); }
+                        for (i = 0; i < tam_vet; i++) {
                             if (((vet_esq_env[i_esq] <= vet_dir_env[i_dir]) && (i_esq < (tam_vet/2))) || (i_dir == (tam_vet/2)))
                                 vetor_final[i] = vet_esq_env[i_esq++];
                             else
                                 vetor_final[i] = vet_dir_env[i_dir++];
                         }
                         verificacao = 1;
+
+if(debug == 1) { int indice = 0; printf("\n Array Retornou a raiz: \n"); for (indice = 0; indice < tam_vet; indice++){ printf(" %d,", vetor_final[indice]); } printf("\n"); }
+                        
+
+
                         printf("\n\n ---------------- FIM -----------------------");
                     }
             }
@@ -115,6 +129,11 @@ main(int argc, char **argv)
         id_pai = (id_proc - 1) / 2;
         while(1){
             MPI_Recv(recebido, tam_vet, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+// if(status.MPI_TAG == t_vetor) {
+// printf("\n FILHO %d RECEBEU VET tamvet= %d \n", id_proc, tam_vetor_n);
+// int indice = 0; int *testeeeeee; testeeeeee = recebido;
+// for (indice = 0; indice < tam_vetor_n; indice++){ printf(" %d,", recebido[indice]); }
+// printf("\n fim FILHO %d RECEBEU VET \n", id_proc); }
             if(status.MPI_TAG == t_vetor){
                 if(debug == 1) printf("\nChegou !!! %d e o tamanho do vetor => %d", id_proc, tam_vetor_n);
                 // Verifica se deve ou nao ordenar 
@@ -124,8 +143,9 @@ main(int argc, char **argv)
                     int *vet_aux;
                     vet_aux = recebido;
                     qsort(vet_aux, tam_vetor_n, sizeof(int), compare);
+if(debug == 1) { printf("\n NODO %d ORDENOU \n", id_proc); int indice = 0; for (indice = 0; indice < tam_vetor_n; indice++){ printf(" %d,", vet_aux[indice]); } }
 
-                    MPI_Send(&vet_aux, tam_vetor_n, MPI_INT, id_pai, t_r_vetor, MPI_COMM_WORLD);
+                    MPI_Send(vet_aux, tam_vetor_n, MPI_INT, id_pai, t_r_vetor, MPI_COMM_WORLD);
                 }else{// Manda para os filhos 
                     if(debug == 1) printf("\n Sou filho e vou mandar para os meus filhos!");
                     int vet_esq_n[tam_vetor_n/2]; // 1000 / 2 = 500 0..499 500...999
