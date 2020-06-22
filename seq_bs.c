@@ -1,14 +1,9 @@
 #include <stdio.h>
 #include <time.h>
 
-int compare(const void *a, const void *b)
-{
-	return (*(int *)a - *(int *)b);
-}
 
 int main(int argc, char** argv)
 {
-
     int tam_vet = 2000;
     int vetor[tam_vet];
     int i,j;
@@ -18,7 +13,13 @@ int main(int argc, char** argv)
     
     clock_t begin = clock();
 
-    qsort(vetor, tam_vet, sizeof(int), compare);
+    for (i=0 ; i<tam_vet; i++)
+        for (j=i ; j<tam_vet; j++)
+            if(vetor[i] > vetor[j]) {
+                int auxvet = vetor[i];
+                vetor[i] = vetor[j];
+                vetor[j] = auxvet;
+            }
         
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
