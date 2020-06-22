@@ -52,6 +52,7 @@ main(int argc, char **argv)
         for (i = 0; i < tam_vet; i++)
             vetor[i] = rand() % nums_vet + 1;
 
+//array gerado embaralhado.
 if(debug == 1) { int indice = 0; printf("\n Array Gerado na raiz: \n"); for (indice = 0; indice < tam_vet; indice++){ printf(" %d,", vetor[indice]); } printf("\n"); }
 
         //Por ser o raiz pular algumas etapas tipo calcular lados do array
@@ -83,20 +84,25 @@ if(debug == 1) { int indice = 0; printf("\n Array Gerado na raiz: \n"); for (ind
             if(status.MPI_TAG == t_r_vetor){
                     espera++;
                     if(status.MPI_SOURCE == id_filho_esq){
-                        // vet_esq_env = recebido;
+                        vet_esq_env = recebido;
+//aqui chega o vetor do filho esquerdo e ele esta chegando certinho, so que nao consegui copiar o conteudo usando memcpy nem for
 if(debug == 1) { int indice = 0; printf("\n Array do filho ESQ voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
-int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_esq_env[indice] = recebido[indice];
+// memcpy(vet_esq_env, recebido, sizeof(int)*(tam_vet/2));
+// int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_esq_env[indice] = recebido[indice];
                         
                     }else{
-                        // vet_dir_env = recebido;
+                        vet_dir_env = recebido;
+//aqui chega o vetor do filho direito e ele esta chegando certinho, so que nao consegui copiar o conteudo usando memcpy nem for
 if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
-int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_dir_env[indice] = recebido[indice];
+// memcpy(vet_dir_env, recebido, sizeof(int)*(tam_vet/2));
+// int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_dir_env[indice] = recebido[indice];
                     }
                     if(espera == 2){
                         int vetor_final[tam_vet];
                         // ~~~ Processo de Interleaving ~~~
                         i_esq = 0;
                         i_dir = 0;
+//aqui os dois estao apontados para a mesma memoria e o resultado eh os numeros duplicados
 if(debug == 1) { int indice = 0; printf("\n Array do filho ESQ voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", vet_esq_env[indice]); } printf("\n"); }
 if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", vet_dir_env[indice]); } printf("\n"); }
                         for (i = 0; i < tam_vet; i++) {
@@ -107,6 +113,7 @@ if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \
                         }
                         verificacao = 1;
 
+// resultado final
 if(debug == 1) { int indice = 0; printf("\n Array Retornou a raiz: \n"); for (indice = 0; indice < tam_vet; indice++){ printf(" %d,", vetor_final[indice]); } printf("\n"); }
                         
 
@@ -129,11 +136,6 @@ if(debug == 1) { int indice = 0; printf("\n Array Retornou a raiz: \n"); for (in
         id_pai = (id_proc - 1) / 2;
         while(1){
             MPI_Recv(recebido, tam_vet, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-// if(status.MPI_TAG == t_vetor) {
-// printf("\n FILHO %d RECEBEU VET tamvet= %d \n", id_proc, tam_vetor_n);
-// int indice = 0; int *testeeeeee; testeeeeee = recebido;
-// for (indice = 0; indice < tam_vetor_n; indice++){ printf(" %d,", recebido[indice]); }
-// printf("\n fim FILHO %d RECEBEU VET \n", id_proc); }
             if(status.MPI_TAG == t_vetor){
                 if(debug == 1) printf("\nChegou !!! %d e o tamanho do vetor => %d", id_proc, tam_vetor_n);
                 // Verifica se deve ou nao ordenar 
