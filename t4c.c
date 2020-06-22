@@ -12,11 +12,11 @@ int compare(const void *a, const void *b)
 main(int argc, char **argv)
 {
     // Parametros
-    int tam_vet = 50, nums_vet = 1000; // tamanho do vetor inicial e range dos numeros aleatorios de ex 100 = 0~99
-    int tam_fixo = 25;
+    int tam_vet = 1000000, nums_vet = 1000; // tamanho do vetor inicial e range dos numeros aleatorios de ex 100 = 0~99
+    int tam_fixo = 63000‬‬; // 1 000 000 / 16 -> Por que 31 processos tem 16 folhas 
 
     // Ativa e Desativa o DEBUG
-    int debug = 1;
+    int debug = 0;
 
     // Variaveis
     int id_proc, qtd_proc;
@@ -30,10 +30,10 @@ main(int argc, char **argv)
     int i_esq = 0;
     int i_dir = 0;
     int espera = 0;
-    int *vet_esq_env;
-    int *vet_dir_env;
     int vet_aux_esq[tam_vet];
     int vet_aux_dir[tam_vet];
+
+    double ti, tf; // Tempos
 
     // TAGS
     int t_vetor = 50;
@@ -58,7 +58,9 @@ main(int argc, char **argv)
 if(debug == 1) { int indice = 0; printf("\n Array Gerado na raiz: \n"); for (indice = 0; indice < tam_vet; indice++){ printf(" %d,", vetor[indice]); } printf("\n"); }
 
         //Por ser o raiz pular algumas etapas tipo calcular lados do array
-        
+
+        ti = MPI_Wtime();
+
         int vet_esq[tam_vet/2]; // 1000 / 2 = 500 0..499 500...999
         int vet_dir[tam_vet/2];
         
@@ -86,22 +88,16 @@ if(debug == 1) { int indice = 0; printf("\n Array Gerado na raiz: \n"); for (ind
             if(status.MPI_TAG == t_r_vetor){
                     espera++;
                     if(status.MPI_SOURCE == id_filho_esq){
-                        //vet_esq_env = recebido;
                         for(i = 0; i < tam_vet/2; i++)
                             vet_aux_esq[i] = recebido[i];
 //aqui chega o vetor do filho esquerdo e ele esta chegando certinho, so que nao consegui copiar o conteudo usando memcpy nem for
 if(debug == 1) { int indice = 0; printf("\n Array do filho ESQ voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
-// memcpy(vet_esq_env, recebido, sizeof(int)*(tam_vet/2));
-// int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_esq_env[indice] = recebido[indice];
                         
                     }else{
-                        //vet_dir_env = recebido;
                         for(i = 0; i < tam_vet/2; i++)
                             vet_aux_dir[i] = recebido[i];
 //aqui chega o vetor do filho direito e ele esta chegando certinho, so que nao consegui copiar o conteudo usando memcpy nem for
 if(debug == 1) { int indice = 0; printf("\n Array do filho DIR voltou na raiz: \n"); for (indice = 0; indice < tam_vet/2; indice++){ printf(" %d,", recebido[indice]); } printf("\n"); }
-// memcpy(vet_dir_env, recebido, sizeof(int)*(tam_vet/2));
-// int indice = 0; for (indice = 0; indice < tam_vet/2; indice++) vet_dir_env[indice] = recebido[indice];
                     }
                     if(espera == 2){
                         int vetor_final[tam_vet];
@@ -170,10 +166,11 @@ if(debug == 1) { printf("\n NODO %d ORDENOU \n", id_proc); int indice = 0; for (
                         }
                     }
                     nivel_aux[0] = meu_nivel + 1;
+                    // Manda o Nivel para os Filhos
                     MPI_Send(nivel_aux, tam_vet, MPI_INT, id_filho_esq, t_nivel, MPI_COMM_WORLD);
                     MPI_Send(nivel_aux, tam_vet, MPI_INT, id_filho_dir, t_nivel, MPI_COMM_WORLD);
 
-
+                    // Manda o Vetor para os Filhos
                     MPI_Send(vet_esq_n, (tam_vetor_n/2), MPI_INT, id_filho_esq, t_vetor, MPI_COMM_WORLD);
                     MPI_Send(vet_dir_n, (tam_vetor_n/2), MPI_INT, id_filho_dir, t_vetor, MPI_COMM_WORLD);
 
@@ -190,11 +187,9 @@ if(debug == 1) { printf("\n NODO %d ORDENOU \n", id_proc); int indice = 0; for (
             }else if(status.MPI_TAG == t_r_vetor){ // Aguardando o retorno do vetor
                 esperando_filho++;
                 if(status.MPI_SOURCE == id_filho_esq){
-                    //vet_esq_env = recebido;
                     for(i = 0; i < tam_vetor_n; i++)
                         vet_aux_esq[i] = recebido[i];
                 }else{
-                    //vet_dir_env = recebido;
                     for(i = 0; i < tam_vetor_n; i++)
                         vet_aux_dir[i] = recebido[i];
                 }
@@ -217,6 +212,15 @@ if(debug == 1) { printf("\n NODO %d ORDENOU \n", id_proc); int indice = 0; for (
             }
         }
     }
+    	if (id_proc == 0)
+	{
+		tf = MPI_Wtime();
+		double total_time;
+		total_time = tf - ti;
+		printf("\n TEMPO TOTAL = %f \n", total_time);
+	}
+
     MPI_Finalize();
+    return 0;
     
 }
