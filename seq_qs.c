@@ -14,7 +14,7 @@ main(int argc, char** argv)
     int source;   /* Identificador do proc.origem */
     int dest;     /* Identificador do proc. destino */
     int tag = 50; /* Tag para as mensagens */
-    int tam_vet = 50, nums_vet = 1000; // tamanho do vetor inicial e range dos numeros aleatorios de ex 100 = 0~99
+    int tam_vet = 1000000;
     int vetor[tam_vet];
     int i;
     double ti,tf;
@@ -27,12 +27,16 @@ main(int argc, char** argv)
     MPI_Comm_size(MPI_COMM_WORLD, &proc_n);
 
     if (my_rank == 0){  
-        for (i = 0; i < tam_vet; i++)
-            vetor[i] = rand() % nums_vet + 1;
+        for (i=0 ; i<tam_vet; i++)              /* init array with worst case for sorting */
+            vetor[i] = tam_vet-i;
+
         ti = MPI_Wtime();
         qsort(vetor, tam_vet, sizeof(int), compare);
 		tf = MPI_Wtime();
 		double total_time;
+        for (i=0 ; i<tam_vet; i++)              /* init array with worst case for sorting */
+            printf("%d,", vetor[i]);
+
 		total_time = tf - ti;
 		printf("\n TEMPO TOTAL = %f \n", total_time);
     }
